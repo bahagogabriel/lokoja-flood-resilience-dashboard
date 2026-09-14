@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Interactive flood susceptibility, exposure and intervention-priority dashboard for Lokoja, Nigeria."
+    />
+    <title>Lokoja Flood Resilience Dashboard</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1f2a'/%3E%3Cpath d='M14 39c7-12 14-18 20-26 2 11 16 19 16 31 0 8-7 14-18 14S14 51 14 39Z' fill='%232aa7a1'/%3E%3Cpath d='M18 43c8 4 19 4 30-1' fill='none' stroke='%23f6c453' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" role="img">
+            <path d="M8 24c5-8 10-13 13-19 2 8 11 13 11 22 0 6-5 10-12 10S8 32 8 24Z" />
+            <path class="brand-wave" d="M10 27c6 3 13 3 21-1" />
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <h1>Lokoja Flood Resilience</h1>
+          <p>Susceptibility, exposure and intervention priorities</p>
+        </div>
+        <div class="topbar-actions">
+          <span class="status-pill"><span></span> 2026 project</span>
+          <button id="about-button" class="ghost-button" type="button">About &amp; methods</button>
+        </div>
+      </header>
+
+      <section class="metric-strip" aria-label="Headline results">
+        <article class="metric-card">
+          <span class="metric-label">Robust priority units</span>
+          <strong id="metric-units">1,475</strong>
+          <small>Critical and High</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Priority area</span>
+          <strong id="metric-area">476.98 km²</strong>
+          <small>Stable across scenarios</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Population represented</span>
+          <strong id="metric-population">226,173</strong>
+          <small>Official constrained WorldPop</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Buildings represented</span>
+          <strong id="metric-buildings">87,726</strong>
+          <small>Mapped Open Buildings</small>
+        </article>
+      </section>
+
+      <main class="workspace">
+        <aside id="control-panel" class="control-panel" aria-label="Map controls">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Explore the evidence</p>
+              <h2>Map layers</h2>
+            </div>
+            <button id="panel-close" class="icon-button mobile-only" type="button" aria-label="Close controls">×</button>
+          </div>
+
+          <nav class="view-tabs" aria-label="Dashboard view">
+            <button class="view-tab active" data-view="priority" type="button">Priority</button>
+            <button class="view-tab" data-view="themes" type="button">Themes</button>
+            <button class="view-tab" data-view="susceptibility" type="button">Susceptibility</button>
+            <button class="view-tab" data-view="floods" type="button">Flood history</button>
+          </nav>
+
+          <section id="priority-controls" class="control-section">
+            <div class="section-title-row">
+              <h3>Priority classes</h3>
+              <button id="priority-all" class="text-button" type="button">Select all</button>
+            </div>
+            <div id="priority-options" class="check-list"></div>
+          </section>
+
+          <section id="theme-controls" class="control-section hidden">
+            <div class="section-title-row">
+              <h3>Intervention themes</h3>
+              <button id="theme-all" class="text-button" type="button">Select all</button>
+            </div>
+            <div id="theme-options" class="check-list"></div>
+          </section>
+
+          <section id="susceptibility-controls" class="control-section hidden">
+            <h3>Susceptibility surface</h3>
+            <div class="segmented-control" role="group" aria-label="Susceptibility layer">
+              <button class="segment active" data-surface="classes" type="button">Classes</button>
+              <button class="segment" data-surface="probability" type="button">Probability</button>
+            </div>
+          </section>
+
+          <section id="flood-controls" class="control-section hidden">
+            <h3>Observed flood event</h3>
+            <div id="year-options" class="year-grid" role="group" aria-label="Flood year"></div>
+          </section>
+
+          <section class="control-section">
+            <h3>Supporting evidence</h3>
+            <div class="switch-list">
+              <label><input id="toggle-robust" type="checkbox" checked /><span>Robust priority outlines</span></label>
+              <label><input id="toggle-facilities" type="checkbox" checked /><span>Critical facilities</span></label>
+              <label><input id="toggle-crossings" type="checkbox" checked /><span>Bridges and fords</span></label>
+              <label><input id="toggle-roads" type="checkbox" checked /><span>High-risk road points</span></label>
+            </div>
+          </section>
+
+          <section class="selection-summary" aria-live="polite">
+            <p class="eyebrow">Current selection</p>
+            <div class="summary-grid">
+              <div><strong id="selected-units">9,833</strong><span>units</span></div>
+              <div><strong id="selected-area">3,382.89</strong><span>km²</span></div>
+              <div><strong id="selected-population">241,746</strong><span>people</span></div>
+              <div><strong id="selected-buildings">93,787</strong><span>buildings</span></div>
+            </div>
+          </section>
+
+          <section class="control-section chart-section">
+            <div class="section-title-row">
+              <h3>Units by priority</h3>
+              <span id="selection-note">All classes</span>
+            </div>
+            <div id="priority-chart" class="priority-chart"></div>
+          </section>
+
+          <p class="screening-note">Decision-support screening only. Priority locations require field verification and detailed assessment.</p>
+        </aside>
+
+        <section class="map-stage" aria-label="Interactive map">
+          <div id="map" role="application" aria-label="Interactive map of Lokoja flood resilience priorities"></div>
+          <button id="panel-open" class="mobile-panel-button mobile-only" type="button">Layers &amp; filters</button>
+          <div id="map-mode-label" class="map-mode-label">Intervention priority</div>
+          <div id="legend" class="map-legend" aria-label="Map legend"></div>
+          <button id="reset-view" class="reset-button" type="button" title="Reset map extent" aria-label="Reset map extent">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9V5h4M19 9V5h-4M5 15v4h4M19 15v4h-4" /></svg>
+          </button>
+          <div id="loading" class="loading-state">
+            <div class="loader"></div>
+            <strong>Loading Lokoja spatial data</strong>
+            <span>Preparing 9,833 planning units and evidence layers…</span>
+          </div>
+          <div id="map-error" class="map-error hidden" role="alert">
+            <strong>The interactive map could not load.</strong>
+            <span>Serve this folder through a web host or local web server; it cannot run directly from a file URL.</span>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="about-dialog" class="about-dialog">
+      <form method="dialog" class="dialog-shell">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">Project context</p>
+            <h2>About this dashboard</h2>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Close dialog">×</button>
+        </div>
+        <div class="dialog-content">
+          <p>This dashboard connects multi-event Sentinel-1 flood observations, a spatially validated Random Forest susceptibility model, exposure indicators and infrastructure screening across Lokoja LGA.</p>
+          <div class="method-grid">
+            <article><strong>4</strong><span>flood events<br />2018–2024</span></article>
+            <article><strong>17</strong><span>terrain, water and land-cover predictors</span></article>
+            <article><strong>0.839</strong><span>independent 2024 PR-AUC</span></article>
+            <article><strong>96.64%</strong><span>2024 flood captured by Very High class</span></article>
+          </div>
+          <h3>How to interpret the map</h3>
+          <p>Susceptibility indicates relative flood-prone conditions. Intervention priority additionally considers population, buildings, infrastructure and observed 2024 flooding. It does not represent flood depth, annual probability, damage or a final engineering design.</p>
+          <h3>Data and tools</h3>
+          <p>Sentinel-1, JRC Global Surface Water, Dynamic World, HydroSHEDS, WorldPop, Google Open Buildings and OpenStreetMap. Analysis used Google Earth Engine, ArcGIS Pro, Python and scikit-learn.</p>
+          <h3>Author</h3>
+          <p><strong>Gabriel Bahago Samuel</strong><br />GIS Analyst · MECON Services Ltd., Jos, Nigeria</p>
+        </div>
+        <div class="dialog-footer">
+          <a href="https://www.linkedin.com/in/bahagogabriel" target="_blank" rel="noreferrer">LinkedIn profile</a>
+          <button class="primary-button" value="cancel">Return to map</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
