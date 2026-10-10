@@ -238,6 +238,13 @@ function bindControls() {
 function setView(view) {
   if (!["priority", "themes", "susceptibility", "floods"].includes(view)) return;
   state.view = view;
+  const help = {
+    priority: "Where should resilience investigations begin? Colours combine several mapped factors, not measured flood damage.",
+    themes: "What types of resilience work might be worth examining? Each colour is a possible planning theme, not an approved project.",
+    susceptibility: "Where do environmental conditions suggest greater flood-proneness? Model scores are relative, not annual flood probabilities.",
+    floods: "Where did satellites indicate flooding in each selected year? Past observations are not forecasts."
+  };
+  byId("view-help").textContent = help[view];
   document.querySelectorAll(".view-tab").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === view);
   });
@@ -309,28 +316,28 @@ function updateLegend() {
   let title;
   let items;
   if (state.view === "priority") {
-    title = "Intervention priority";
+    title = "Relative planning priority";
     items = priorityOrder.map((label) => ({ label, color: priorityColors[label] }));
   } else if (state.view === "themes") {
-    title = "Recommended intervention";
+    title = "Possible resilience actions";
     items = themeOrder.map((label) => ({ label, color: themeColors[label] }));
   } else if (state.view === "susceptibility" && state.surface === "classes") {
-    title = "Flood susceptibility";
+    title = "Relative flood-proneness";
     items = manifest.overlays.susceptibility_classes.legend.map((item) => ({ label: item.label, color: item.colour }));
   } else if (state.view === "susceptibility") {
     byId("legend").innerHTML = `
-      <div class="legend-title">Flood probability</div>
+      <div class="legend-title">Modelled flood-proneness score</div>
       <div class="legend-gradient"></div>
-      <div class="legend-scale"><span>0</span><span>0.5</span><span>1.0</span></div>`;
+      <div class="legend-scale"><span>0</span><span>0.5</span><span>1.0</span></div><p class="legend-note">Relative model score, not annual flood chance.</p>`;
     return;
   } else {
-    title = `${state.floodYear} observed flood`;
-    items = [{ label: "Mapped flood extent", color: floodColors[state.floodYear] }];
+    title = `${state.floodYear} satellite-observed flood`;
+    items = [{ label: "Satellite-mapped flooded area", color: floodColors[state.floodYear] }];
   }
 
   byId("legend").innerHTML = `
     <div class="legend-title">${escapeHtml(title)}</div>
-    ${items.map((item) => `<div class="legend-item"><span class="legend-swatch" style="background:${item.color}"></span><span>${escapeHtml(item.label)}</span></div>`).join("")}`;
+    ${items.map((item) => `<div class="legend-item"><span class="legend-swatch" style="background:${item.color}"></span><span>${escapeHtml(item.label)}</span></div>`).join("")}<p class="legend-note">${state.view === "priority" ? "Colours show relative planning priority, not proven flood damage." : state.view === "themes" ? "These are possible actions to investigate, not approved projects." : state.view === "susceptibility" ? "Relative modelled conditions, not annual flood probabilities." : "Historical satellite observations, not a future flood forecast."}</p>`;
 }
 
 function updateMapMode() {
@@ -365,10 +372,10 @@ function updateMapMode() {
   setLayerVisibility("road-points", state.assets.roads);
 
   const labels = {
-    priority: "Intervention priority",
-    themes: "Recommended intervention themes",
-    susceptibility: state.surface === "classes" ? "Flood susceptibility classes" : "Flood susceptibility probability",
-    floods: `${state.floodYear} observed flood extent`,
+    priority: "Relative resilience-planning priority",
+    themes: "Possible resilience actions",
+    susceptibility: state.surface === "classes" ? "Relative flood-proneness classes" : "Relative flood-proneness model score",
+    floods: `${state.floodYear} satellite-mapped flood extent`,
   };
   byId("map-mode-label").textContent = labels[state.view];
   updateLegend();
@@ -495,16 +502,18 @@ function addMapLayers() {
 function planningPopup(properties) {
   return `
     <article class="popup-card">
-      <header><small>Planning unit ${escapeHtml(properties.unit_id)}</small><strong>${escapeHtml(properties.prio_class)} priority</strong></header>
+      <header><small>Flood-resilience planning area</small><strong>${escapeHtml(properties.prio_class)} relative priority</strong></header>
+      <div class="popup-intro">A location for possible resilience investigation, not proof of flood damage.</div>
       <div class="popup-body">
-        <div class="popup-stat"><span>Theme</span><strong>${escapeHtml(properties.theme)}</strong></div>
-        <div class="popup-stat"><span>Priority score</span><strong>${formatDecimal(properties.base_score, 1)}</strong></div>
-        <div class="popup-stat"><span>Population</span><strong>${formatInteger(properties.pop2020)}</strong></div>
-        <div class="popup-stat"><span>Buildings</span><strong>${formatInteger(properties.bldg_count)}</strong></div>
-        <div class="popup-stat"><span>Mean probability</span><strong>${formatDecimal(safeNumber(properties.mean_prob) * 100, 1)}%</strong></div>
-        <div class="popup-stat"><span>2024 flooded</span><strong>${formatDecimal(properties.flood24_km2, 3)} km²</strong></div>
+        <div class="popup-stat"><span>Possible action type</span><strong>${escapeHtml(properties.theme)}</strong></div>
+        <div class="popup-stat"><span>Area assessed</span><strong>${formatDecimal(properties.model_km2, 2)} km²</strong></div>
+        <div class="popup-stat"><span>Modelled residents (2020)</span><strong>${formatInteger(properties.pop2020)}</strong></div>
+        <div class="popup-stat"><span>Mapped buildings</span><strong>${formatInteger(properties.bldg_count)}</strong></div>
+        <div class="popup-stat"><span>Model flood-proneness score</span><strong>${formatDecimal(safeNumber(properties.mean_prob) * 100, 1)} / 100</strong></div>
+        <div class="popup-stat"><span>Satellite-mapped flood overlap (2024)</span><strong>${formatDecimal(properties.flood24_km2, 3)} km²</strong></div>
       </div>
-      <div class="popup-action"><strong>Recommended action:</strong> ${escapeHtml(properties.action)}</div>
+      <div class="popup-action"><strong>Suggested follow-up:</strong> ${escapeHtml(properties.action)}</div>
+      <details class="popup-technical"><summary>More about this modelled location</summary><p>Planning unit ID: ${escapeHtml(properties.unit_id)}. Relative planning score: ${formatDecimal(properties.base_score, 1)}.</p><p>Model scores are not annual flood probabilities. Counts shown are not confirmed flood victims or damaged buildings.</p></details>
     </article>`;
 }
 
@@ -518,9 +527,10 @@ function assetPopup(layerId, properties) {
   return `
     <article class="popup-card">
       <header><small>${escapeHtml(type)}</small><strong>${escapeHtml(name)}</strong></header>
+      <div class="popup-intro">An infrastructure location to examine, not confirmed flood damage.</div>
       <div class="popup-body">
-        <div class="popup-stat"><span>Screening priority</span><strong>${escapeHtml(properties.priority || "High")}</strong></div>
-        <div class="popup-stat"><span>OSM reference</span><strong>${escapeHtml(properties.F_id || "—")}</strong></div>
+        <div class="popup-stat"><span>Relative screening priority</span><strong>${escapeHtml(properties.priority || "High")}</strong></div>
+        <div class="popup-stat"><span>OSM reference (technical)</span><strong>${escapeHtml(properties.F_id || "—")}</strong></div>
       </div>
     </article>`;
 }
