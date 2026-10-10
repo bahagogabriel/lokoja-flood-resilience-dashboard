@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Interactive flood susceptibility, exposure and intervention-priority dashboard for Lokoja, Nigeria."
+      content="Explore flood history, places with flood-prone conditions, and locations where resilience planning deserves closer investigation in Lokoja, Nigeria."
     />
     <title>Lokoja Flood Resilience Dashboard</title>
     <link
@@ -17,7 +17,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/dist/maplibre-gl.css"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20261010-story1" />
   </head>
   <body>
     <div id="app" class="app-shell">
@@ -30,57 +30,72 @@
         </div>
         <div class="brand-copy">
           <h1>Lokoja Flood Resilience</h1>
-          <p>Susceptibility, exposure and intervention priorities</p>
+          <p>Flood history, flood-prone conditions and planning priorities</p>
         </div>
         <div class="topbar-actions">
-          <span class="status-pill"><span></span> 2026 project</span>
+          <span class="status-pill"><span></span> Lokoja, Kogi State</span>
           <button id="about-button" class="ghost-button" type="button">About &amp; methods</button>
         </div>
       </header>
 
+      <section class="story-intro" aria-labelledby="study-question">
+        <div class="story-lead">
+          <p class="story-kicker">LOKOJA, NIGERIA · FLOOD HISTORY 2018–2024</p>
+          <h2 id="study-question">Where is Lokoja more flood-prone, and where should protective action be investigated first?</h2>
+          <p>Flooding can disrupt homes, roads and essential services. We compared satellite-observed floods, landscape conditions, and mapped people and infrastructure to identify places that may deserve attention.</p>
+          <a href="#explore-lokoja-map" class="story-link">Explore the maps <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="story-steps" aria-label="Understand the study">
+          <article><span>01 · WHAT WE STUDIED</span><p>Satellite flood observations for <strong>2018, 2020, 2022 and 2024</strong>, alongside terrain and water-related conditions.</p></article>
+          <article><span>02 · WHY IT MATTERS</span><p>Understanding where flood-prone conditions coincide with people and important infrastructure can guide further checks.</p></article>
+          <article><span>03 · WHAT WE FOUND</span><p><strong>1,475 Critical or High planning units</strong>, covering approximately <strong>476.98 km²</strong>, retained high priority across the tested scenarios.</p></article>
+          <article><span>04 · WHAT IT HELPS US DO</span><p>Compare possible resilience actions and focus investigations—not predict flood depths or confirm future losses.</p></article>
+        </div>
+      </section>
       <section class="metric-strip" aria-label="Headline results">
         <article class="metric-card">
-          <span class="metric-label">Robust priority units</span>
+          <span class="metric-label">Consistently high-priority areas</span>
           <strong id="metric-units">1,475</strong>
-          <small>Critical and High</small>
+          <small>600 m planning units · Critical and High across scenarios</small>
         </article>
         <article class="metric-card">
-          <span class="metric-label">Priority area</span>
+          <span class="metric-label">Area in these priority units</span>
           <strong id="metric-area">476.98 km²</strong>
-          <small>Stable across scenarios</small>
+          <small>Across tested planning scenarios</small>
         </article>
         <article class="metric-card">
-          <span class="metric-label">Population represented</span>
+          <span class="metric-label">Modelled residents in these units</span>
           <strong id="metric-population">226,173</strong>
-          <small>Official constrained WorldPop</small>
+          <small>2020 WorldPop estimate, not confirmed flood victims</small>
         </article>
         <article class="metric-card">
-          <span class="metric-label">Buildings represented</span>
+          <span class="metric-label">Mapped buildings in these units</span>
           <strong id="metric-buildings">87,726</strong>
-          <small>Mapped Open Buildings</small>
+          <small>Open Buildings estimate, not confirmed damage</small>
         </article>
       </section>
 
-      <main class="workspace">
+      <main id="explore-lokoja-map" class="workspace">
         <aside id="control-panel" class="control-panel" aria-label="Map controls">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Explore the evidence</p>
-              <h2>Map layers</h2>
+              <h2>Explore the flood evidence</h2>
             </div>
             <button id="panel-close" class="icon-button mobile-only" type="button" aria-label="Close controls">×</button>
           </div>
 
+          <p class="view-help" id="view-help">Start here: see where several planning factors point to a greater need for follow-up.</p>
           <nav class="view-tabs" aria-label="Dashboard view">
-            <button class="view-tab active" data-view="priority" type="button">Priority</button>
-            <button class="view-tab" data-view="themes" type="button">Themes</button>
-            <button class="view-tab" data-view="susceptibility" type="button">Susceptibility</button>
-            <button class="view-tab" data-view="floods" type="button">Flood history</button>
+            <button class="view-tab active" data-view="priority" type="button">Where to act</button>
+            <button class="view-tab" data-view="themes" type="button">Possible actions</button>
+            <button class="view-tab" data-view="susceptibility" type="button">Flood-prone areas</button>
+            <button class="view-tab" data-view="floods" type="button">Past floods</button>
           </nav>
 
           <section id="priority-controls" class="control-section">
             <div class="section-title-row">
-              <h3>Priority classes</h3>
+              <h3>Relative planning priority</h3>
               <button id="priority-all" class="text-button" type="button">Select all</button>
             </div>
             <div id="priority-options" class="check-list"></div>
@@ -88,37 +103,37 @@
 
           <section id="theme-controls" class="control-section hidden">
             <div class="section-title-row">
-              <h3>Intervention themes</h3>
+              <h3>Types of possible action</h3>
               <button id="theme-all" class="text-button" type="button">Select all</button>
             </div>
             <div id="theme-options" class="check-list"></div>
           </section>
 
           <section id="susceptibility-controls" class="control-section hidden">
-            <h3>Susceptibility surface</h3>
+            <h3>Flood-prone conditions (model)</h3>
             <div class="segmented-control" role="group" aria-label="Susceptibility layer">
-              <button class="segment active" data-surface="classes" type="button">Classes</button>
-              <button class="segment" data-surface="probability" type="button">Probability</button>
+              <button class="segment active" data-surface="classes" type="button">Categories</button>
+              <button class="segment" data-surface="probability" type="button">Model score</button>
             </div>
           </section>
 
           <section id="flood-controls" class="control-section hidden">
-            <h3>Observed flood event</h3>
+            <h3>Observed flood year</h3>
             <div id="year-options" class="year-grid" role="group" aria-label="Flood year"></div>
           </section>
 
           <section class="control-section">
-            <h3>Supporting evidence</h3>
+            <h3>Optional supporting map layers</h3>
             <div class="switch-list">
-              <label><input id="toggle-robust" type="checkbox" checked /><span>Robust priority outlines</span></label>
-              <label><input id="toggle-facilities" type="checkbox" checked /><span>Critical facilities</span></label>
+              <label><input id="toggle-robust" type="checkbox" checked /><span>Consistently high-priority outlines</span></label>
+              <label><input id="toggle-facilities" type="checkbox" checked /><span>Important facilities</span></label>
               <label><input id="toggle-crossings" type="checkbox" checked /><span>Bridges and fords</span></label>
-              <label><input id="toggle-roads" type="checkbox" checked /><span>High-risk road points</span></label>
+              <label><input id="toggle-roads" type="checkbox" checked /><span>Road locations to examine</span></label>
             </div>
           </section>
 
           <section class="selection-summary" aria-live="polite">
-            <p class="eyebrow">Current selection</p>
+            <p class="eyebrow">Areas matching your filters</p>
             <div class="summary-grid">
               <div><strong id="selected-units">9,833</strong><span>units</span></div>
               <div><strong id="selected-area">3,382.89</strong><span>km²</span></div>
@@ -129,20 +144,20 @@
 
           <section class="control-section chart-section">
             <div class="section-title-row">
-              <h3>Units by priority</h3>
+              <h3>Planning areas by priority</h3>
               <span id="selection-note">All classes</span>
             </div>
             <div id="priority-chart" class="priority-chart"></div>
           </section>
 
-          <p class="screening-note">Decision-support screening only. Priority locations require field verification and detailed assessment.</p>
+          <p class="screening-note">These map classes support further investigation. They do not measure flood depth, annual flood chance, confirmed damage or approved construction projects.</p>
         </aside>
 
         <section class="map-stage" aria-label="Interactive map">
           <div id="map" role="application" aria-label="Interactive map of Lokoja flood resilience priorities"></div>
           <button id="panel-open" class="mobile-panel-button mobile-only" type="button">Layers &amp; filters</button>
           <div id="map-mode-label" class="map-mode-label">Intervention priority</div>
-          <div id="legend" class="map-legend" aria-label="Map legend"></div>
+          <div id="legend" class="map-legend" aria-label="What the map colours mean"></div>
           <button id="reset-view" class="reset-button" type="button" title="Reset map extent" aria-label="Reset map extent">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9V5h4M19 9V5h-4M5 15v4h4M19 15v4h-4" /></svg>
           </button>
@@ -169,15 +184,16 @@
           <button class="icon-button" value="cancel" aria-label="Close dialog">×</button>
         </div>
         <div class="dialog-content">
-          <p>This dashboard connects multi-event Sentinel-1 flood observations, a spatially validated Random Forest susceptibility model, exposure indicators and infrastructure screening across Lokoja LGA.</p>
+          <p>This study examined where flooding has been observed in Lokoja, which areas have conditions associated with flooding, and where people, buildings and important routes may justify earlier resilience investigations. Satellite observations from four years were combined with a flood-susceptibility model and geographical planning evidence. This is not a live flood warning or a record of confirmed property damage.</p>
           <div class="method-grid">
             <article><strong>4</strong><span>flood events<br />2018–2024</span></article>
             <article><strong>17</strong><span>terrain, water and land-cover predictors</span></article>
             <article><strong>0.839</strong><span>independent 2024 PR-AUC</span></article>
             <article><strong>96.64%</strong><span>2024 flood captured by Very High class</span></article>
           </div>
-          <h3>How to interpret the map</h3>
-          <p>Susceptibility indicates relative flood-prone conditions. Intervention priority additionally considers population, buildings, infrastructure and observed 2024 flooding. It does not represent flood depth, annual probability, damage or a final engineering design.</p>
+          <h3>How to read the four maps</h3>
+          <p><strong>Where to act</strong> compares planning priorities. <strong>Possible actions</strong> groups locations by suggested investigation or response themes. <strong>Flood-prone areas</strong> shows relative modelled flood susceptibility, not an annual chance of flooding. <strong>Past floods</strong> shows individual satellite-observed flood years. Map symbols for roads, facilities and crossings are supporting context; their presence does not prove damage.</p>
+          <p>Intervention priority additionally considers modelled residents, mapped buildings, infrastructure and the observed 2024 flood evidence. The mapped population and buildings are not counts of people or structures confirmed affected. Neither flood susceptibility nor the planning score represents water depth, an annual flood probability, measured loss or a final engineering design. Field checks and engineering assessment remain necessary.</p>
           <h3>Data and tools</h3>
           <p>Sentinel-1, JRC Global Surface Water, Dynamic World, HydroSHEDS, WorldPop, Google Open Buildings and OpenStreetMap. Analysis used Google Earth Engine, ArcGIS Pro, Python and scikit-learn.</p>
           <h3>Author</h3>
@@ -191,6 +207,6 @@
     </dialog>
 
     <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20261010-story1"></script>
   </body>
 </html>
